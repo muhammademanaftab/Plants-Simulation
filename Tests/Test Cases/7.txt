@@ -1,0 +1,5 @@
+3
+Piggy p 8
+Slender d 5
+Dumpy b 2
+5

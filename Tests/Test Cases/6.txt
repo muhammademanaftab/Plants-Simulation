@@ -1,6 +1,6 @@
 4
-Piggy p 4
+Piggy p 2
 Slender d 5
-Dumpy b 10
+Dumpy b 2
 Willowy d 3
 10

@@ -44,7 +44,7 @@ public class Puffs extends Plant {
                 this.N -= 2;
                 break;
         }
-        // The plant is living only if its nutrient level exceeds 10
-        living = (this.N > 10);
+        // The puff is living only if its nutrient level below 10
+        living = (this.N < 10 && this.N > 0);
     }
 }

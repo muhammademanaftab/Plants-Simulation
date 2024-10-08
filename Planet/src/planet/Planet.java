@@ -59,6 +59,7 @@ public class Planet {
         this.plants.add(p);
     }
 
+
     /**
      * Simulates the changes in nutrient levels of the plants based on the
      * current radiation. It also updates the planet's radiation type based on
@@ -68,6 +69,7 @@ public class Planet {
     public void simulate() {
         totalAlpha = 0;
         totalDelta = 0;
+        ArrayList<Plant> plantsToRemove = new ArrayList<>();
         for (Plant p : plants) {
             p.changeN(radiation);  // Update the plant nutrient level based on radiation type
             if (p.stillLiving()) {  // Only calculate needs for living plants
@@ -80,7 +82,10 @@ public class Planet {
                         totalDelta += 1;  // Delta need increases by 1 if nutrients are between 5 and 10
                     }
                 }
+            } else {
+                plantsToRemove.add(p);  // Gathering plants to remove
             }
+
         }
 
         // Update the radiation type based on the balance between alpha and delta needs
@@ -89,6 +94,7 @@ public class Planet {
         } else if (Math.abs(totalDelta - totalAlpha) >= 3 && totalDelta > totalAlpha) {
             radiation = "delta";
         }
+        plants.removeAll(plantsToRemove);
     }
 
     /**
@@ -96,36 +102,77 @@ public class Planet {
      *
      * @param filename from which we read data
      */
-    public void readSimulateData(String filename) {
+    public void readSimulateData(String filename) throws InvalidCharacterException,
+            InvalidNumberFormatException,
+            InvalidNumberOfEntriesException {
         try (BufferedReader br = new BufferedReader(new FileReader(filename))) {
-            int plantsNumber = Integer.parseInt(br.readLine());  // Read number of plants
+
+            int plantsNumber;
+            try {
+                plantsNumber = Integer.parseInt(br.readLine());  // Read number of plants
+            } catch (NumberFormatException e) {
+                throw new InvalidNumberFormatException("The First line must be an Integer representing the number of plants.");
+            }
+
+            // Loop for the  specified number of plants
             for (int i = 0; i < plantsNumber; i++) {
-                String[] line = br.readLine().split(" ");
-                int N = Integer.parseInt(line[2]);  // Extract plant nutrient level
-                switch (line[1]) {
-                    case "p":  // If plant type is "p",create a Puff plant
-                        this.addPlant(new Puffs(line[0], N));
+                String[] line = br.readLine().split(" "); //splitting on basis of space
+
+                // Ensure the entry is in the correct format (3 parts: name, type, nutrient level)
+                if (line.length != 3) {
+                    throw new InvalidNumberOfEntriesException("Not correct entry format. There should be Expected plant name, type, and nutrient value.");
+                }
+
+                String plantName = line[0];
+                String plantType = line[1];
+                int N;
+
+                // Validate plant nutrient level (must be an integer)
+                try {
+                    N = Integer.parseInt(line[2]);
+                } catch (NumberFormatException e) {
+                    throw new InvalidNumberFormatException("Not correct nutrient format for plant it must be inetegr: " + plantName);
+                }
+
+                // Validate plant type
+                switch (plantType) {
+                    case "p":  // If plant type is "p", create a Puff plant.
+                        this.addPlant(new Puffs(plantName, N));
                         break;
-                    case "b":  // If plant type is "b", create a Parabush plant
-                        this.addPlant(new Parabush(line[0], N));
+                    case "b":  // If plant type is "b", Create a Parabush plant
+                        this.addPlant(new Parabush(plantName, N));
                         break;
-                    case "d":  // If plant type is "d", creates a DeltaTree plant
-                        this.addPlant(new DeltaTree(line[0], N));
+                    case "d":  // If plant type is "d",create a DeltaTree plant
+                        this.addPlant(new DeltaTree(plantName, N));
                         break;
+                    default: //If there is other character other then these 3 then it should give exception.
+                        throw new InvalidCharacterException("Not correct plant type: " + plantType + " for plant : " + plantName);
                 }
             }
 
-            int days = Integer.parseInt(br.readLine());  // Reading number of days
+            // Checkinggs if there are more lines than the expected number of plants
+            if (br.ready()) {
+                String nextLine = br.readLine();
 
-            // Simulate the planet for the specified number of days
-            for (int i = 0; i < days; i++) {
-                this.simulate();  // Updating plant states based on current radiation
+                // Validate the next line as the number of days for simulation
+                try {
+                    int days = Integer.parseInt(nextLine);
+
+                    // Simulate the planet for the specified number of days
+                    for (int i = 0; i < days; i++) {
+                        this.simulate();  // Updating plant states based on current radiation
+                    }
+                } catch (NumberFormatException e) {
+                    throw new InvalidNumberFormatException("Not correct number format for days: " + nextLine);
+                }
+            } else {
+                throw new InvalidNumberOfEntriesException("Missing simulation days input after plant entries.");
             }
-
+            // if there is no file found then file not found exception and on the end IO Exception.
         } catch (FileNotFoundException e) {
             System.out.println("File Not Found: " + filename);
-        }  catch (IOException e) {
-            System.out.println("IO Exception occurred: " + e.getMessage());
+        } catch (IOException e) {
+            System.out.println("IO Exception occurred.");
         }
     }
 
@@ -133,9 +180,20 @@ public class Planet {
      * Report Data function to output the data by using simulate function.
      */
     public void printData() {
-        // Output the final state of all plants 
+        // Making a counter for surviving plants
+        int survivorCount = 0;
+
         for (Plant p : this.getPlants()) {
-            System.out.println(p);
+            if (p.living) {  // Check if the plant is alive
+                System.out.println(p);  // Print the plant name
+                survivorCount++;  // Increasee the counter
+            }
         }
+
+        // If no survivors found, print a different message
+        if (survivorCount == 0) {
+            System.out.println("No survivor plants.");
+        } 
     }
+
 }
