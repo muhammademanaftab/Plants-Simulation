@@ -1,0 +1,5 @@
+3
+Piggy p 1
+Kaudy d 1
+Dumpy b 4
+10

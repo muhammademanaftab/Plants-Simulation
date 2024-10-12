@@ -1,0 +1,5 @@
+3
+Piggy p 4
+Dumpy b 1
+Willowy d 2
+0
